@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head><title>WebSocket Test</title></head>
+  <body>
+    <h1>WebSocket Chat</h1>
+    <input id="msg" placeholder="Enter message..." />
+    <button onclick="send()">Send</button>
+    <ul id="messages"></ul>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+      const socket = io('http://localhost:3000');
+
+      socket.on('connect', () => {
+        console.log('Connected:', socket.id);
+      });
+
+      socket.on('message', (data) => {
+        const li = document.createElement('li');
+        li.textContent = data.floor;
+        console.log(data)
+        document.getElementById('messages').appendChild(li);
+      });
+
+      function send() {
+        const msg = document.getElementById('msg').value;
+        socket.emit('message', {floor:4, direction:'up'});
+      }
+    </script>
+  </body>
+</html>
