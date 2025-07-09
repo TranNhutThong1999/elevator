@@ -9,31 +9,35 @@ export class SmartElevator extends BaseElevator {
     super(id);
   }
 
-  start() {
+  public start(): void {
     if (this.intervalId) return;
     this.intervalId = setInterval(() => this.stepLoop(), 1000);
   }
 
-  stop() {
+  public stop(): void {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+    if (this.closeDoorTimer) {
+      clearTimeout(this.closeDoorTimer);
+      this.closeDoorTimer = null;
+    }
   }
 
-  private setDefault() {
+  private setDefault(): void {
     this.isMoving = false;
     this.direction = Direction.IDLE;
     this.doorOpen = false;
   }
 
-  private move() {
-    const target = [...this.targets][0];
-
+  private move(): void {
+    const target = this.targets[0];
     this.isMoving = true;
     this.doorOpen = false;
     this.isWaitingAtFloor = false;
     this.closeDoorTimer = null;
+
     if (this.currentFloor < target) {
       this.direction = Direction.UP;
       this.currentFloor++;
@@ -42,45 +46,53 @@ export class SmartElevator extends BaseElevator {
       this.currentFloor--;
     }
   }
-  private stepLoop() {
+
+  private stopToFloorAndOpenDoor(): void {
+    this.doorOpen = true;
+    this.isMoving = false;
+    this.direction = Direction.IDLE;
+    this.isWaitingAtFloor = true;
+    this.targets.shift();
+
+    this.closeDoorTimer = setTimeout(() => {
+      this.doorOpen = false;
+      this.isWaitingAtFloor = false;
+      this.closeDoorTimer = null;
+    }, 2000);
+  }
+
+  private stopElevatorIfTargetsNull(): boolean {
     const haveTargets = this.targets.length > 0;
     const havePendingTargets = this.pendingTargets.length > 0;
     if (!haveTargets && !havePendingTargets) {
       this.setDefault();
       this.stop();
-      return;
+      return true;
     }
+
     if (!haveTargets && havePendingTargets) {
       this.updateDirectionByFloor(this.currentFloor, this.pendingTargets[0]);
-      const newPendingTargets: number[] = this.pendingTargets;
-      this.targets = this.sortTagertsByFloor(this.direction, newPendingTargets);
+      this.targets = this.sortTargetsByFloor(
+        this.direction,
+        this.pendingTargets,
+      );
       this.pendingTargets = [];
     }
-
+    return false;
+  }
+  private stepLoop(): void {
     if (this.isWaitingAtFloor) return;
+    if (this.stopElevatorIfTargetsNull()) return;
 
-    const target = [...this.targets][0];
-
+    const target = this.targets[0];
     if (this.currentFloor === target) {
-      this.doorOpen = true;
-      this.isMoving = false;
-      this.direction = Direction.IDLE;
-      this.isWaitingAtFloor = true;
-
-      this.closeDoorTimer = setTimeout(() => {
-        this.doorOpen = false;
-        this.targets.shift();
-        this.isWaitingAtFloor = false;
-        this.closeDoorTimer = null;
-        // clearTimeout(this.closeDoorTimer);
-      }, 2000);
-
+      this.stopToFloorAndOpenDoor();
       return;
     }
     this.move();
   }
 
-  private checkWrongDirection = ({
+  private checkWrongDirection({
     currentFloor,
     currentDirection,
     floor,
@@ -88,61 +100,57 @@ export class SmartElevator extends BaseElevator {
     currentFloor: number;
     currentDirection: Direction;
     floor: number;
-  }): boolean => {
+  }): boolean {
     return (
       (currentFloor > floor && currentDirection === Direction.UP) ||
       (currentFloor < floor && currentDirection === Direction.DOWN)
     );
-  };
+  }
 
-  private updateDirectionByFloor = (
-    currentFloor: number,
-    floor: number,
-  ): void => {
+  private updateDirectionByFloor(currentFloor: number, floor: number): void {
     if (currentFloor < floor) {
       this.direction = Direction.UP;
     } else if (currentFloor > floor) {
       this.direction = Direction.DOWN;
     }
-  };
+  }
 
-  private sortTagertsByFloor = (
+  private sortTargetsByFloor(
     direction: Direction,
     targets: number[] = [],
-  ): number[] => {
-    let newTargets: number[] = targets;
+  ): number[] {
+    const sortedTargets = [...targets];
     if (direction === Direction.UP) {
-      newTargets = targets.sort((a, b) => a - b);
+      sortedTargets.sort((a, b) => a - b);
     } else if (direction === Direction.DOWN) {
-      newTargets = targets.sort((a, b) => b - a);
+      sortedTargets.sort((a, b) => b - a);
     }
-    return [...new Set(newTargets)];
-  };
+    return [...new Set(sortedTargets)];
+  }
 
-  override addTarget(floor: number) {
-    const isWrongDirection = this.checkWrongDirection({
+  override addTarget(floor: number): void {
+    const wrongDirection = this.checkWrongDirection({
       currentFloor: this.currentFloor,
       currentDirection: this.direction,
       floor,
     });
 
-    const isExistedTargetFloor = !!this.targets.includes(floor);
-    const isExistedPendingTargetFloor = !!this.pendingTargets.includes(floor);
+    const existedTarget = this.targets.includes(floor);
+    const existedPendingTarget = this.pendingTargets.includes(floor);
 
-    const isAddPenddingTargets =
-      isWrongDirection && !isExistedPendingTargetFloor;
-
-    if (isAddPenddingTargets) {
+    if (wrongDirection && !existedPendingTarget) {
       this.pendingTargets.push(floor);
-    } else if (!isExistedTargetFloor) {
+    } else if (!existedTarget) {
       this.updateDirectionByFloor(this.currentFloor, floor);
-      const newTargets: number[] = [...this.targets, floor];
-      this.targets = this.sortTagertsByFloor(this.direction, newTargets);
+      this.targets = this.sortTargetsByFloor(this.direction, [
+        ...this.targets,
+        floor,
+      ]);
       this.start();
     }
   }
 
-  forceOpenDoor() {
+  public forceOpenDoor(): void {
     if (this.isMoving) return;
     if (!this.doorOpen) {
       this.doorOpen = true;
@@ -156,13 +164,13 @@ export class SmartElevator extends BaseElevator {
     this.isWaitingAtFloor = true;
     this.closeDoorTimer = setTimeout(() => {
       this.doorOpen = false;
-      this.targets.shift();
+      // this.targets.shift();
       this.isWaitingAtFloor = false;
       this.closeDoorTimer = null;
     }, 2000);
   }
 
-  forceCloseDoor() {
+  public forceCloseDoor(): void {
     if (this.isMoving) return;
     if (this.closeDoorTimer) {
       clearTimeout(this.closeDoorTimer);

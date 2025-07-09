@@ -24,7 +24,7 @@ export class ElevatorGateway {
     data: { floor: number; direction: 'up' | 'down' },
   ) {
     const el = this.elevatorService.callElevator(data.floor, data.direction);
-    client.emit('elevator-assigned', { elevatorId: el ? el.getId : undefined });
+    client.emit('elevator-assigned', { elevatorId: el.getId });
   }
 
   @SubscribeMessage('select-floor')
@@ -32,7 +32,6 @@ export class ElevatorGateway {
     client: Socket,
     data: { elevatorId: number; floor: number },
   ) {
-    console.log(data);
     this.elevatorService.selectFloor(data.elevatorId, data.floor);
   }
 

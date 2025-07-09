@@ -9,7 +9,7 @@ const NUM_FLOORS = 10;
 interface Elevator {
 	id: number;
 	currentFloor: number;
-	direction: 'up' | 'down' | '-';
+	direction: 'up' | 'down';
 	isMoving: boolean;
 	doorOpen: boolean;
 	targets: number[];
@@ -17,19 +17,27 @@ interface Elevator {
 
 export default function ElevatorUI() {
 	const [elevators, setElevators] = useState<Elevator[]>([]);
-	const [elevatorAssigned, setElevetorAssigned] = useState<number>();
+	const [elevatorAssigned, setElevetorAssigned] = useState<
+		number | undefined
+	>(undefined);
+
+	useEffect(() => {
+		if (elevatorAssigned) {
+			const id = setTimeout(() => {
+				setElevetorAssigned(undefined);
+				clearTimeout(id);
+			}, 3000);
+		}
+	}, [elevatorAssigned]);
 
 	useEffect(() => {
 		socket.on('elevator-state', (data) => {
 			setElevators(data);
 		});
-		socket.on('elevator-assigned', (data) => {
-			setElevetorAssigned(data.elevatorId);
-			const id = setTimeout(() => {
-				setElevetorAssigned(undefined);
-				clearTimeout(id);
-			}, 3000);
-		});
+		socket.on(
+			'elevator-assigned',
+			(data) => data?.elevatorId && setElevetorAssigned(data.elevatorId)
+		);
 
 		return () => {
 			socket.off('elevator-state');
@@ -41,8 +49,9 @@ export default function ElevatorUI() {
 		socket.emit('call-elevator', { floor, direction });
 	};
 
-	const openDoor = (id: number) =>
+	const openDoor = (id: number) => {
 		socket.emit('open-door', { elevatorId: id });
+	};
 
 	const closeDoor = (id: number) =>
 		socket.emit('close-door', { elevatorId: id });

@@ -4,10 +4,11 @@ import { SmartElevator } from 'src/model/elevator.model';
 
 @Injectable()
 export class ElevatorService {
-  elevators: SmartElevator[] = [];
+  private elevators: SmartElevator[] = [];
+  private readonly BUSY_ELEVATOR_PENALTY = 10;
+  private readonly UNSUITABLE_ELEVATOR_PENALTY = 100;
 
   constructor() {
-    // private requestLogRepo: Repository<RequestLog>, // @InjectRepository(RequestLog) // @InjectRepository(Elevator) private elevatorRepo: Repository<Elevator>,
     this.elevators = [
       new SmartElevator(1),
       new SmartElevator(2),
@@ -21,34 +22,48 @@ export class ElevatorService {
     return el;
   }
 
-  findBestElevator(floor: number, direction: 'up' | 'down'): SmartElevator {
-    let best: SmartElevator | null = null;
+  private calculateScore(
+    elevator: SmartElevator,
+    targetFloor: number,
+    requestDir: 'up' | 'down',
+  ): number {
+    const currentFloor = elevator.getCurrentFloor;
+    const direction = elevator.getDirection;
+    const distance = Math.abs(currentFloor - targetFloor);
+
+    if (direction === Direction.IDLE) {
+      return distance;
+    }
+
+    const isSameDirection = direction === requestDir;
+    const isHeadingTowardCaller =
+      (requestDir === Direction.UP && currentFloor <= targetFloor) ||
+      (requestDir === Direction.DOWN && currentFloor >= targetFloor);
+
+    if (isSameDirection && isHeadingTowardCaller) {
+      return distance + this.BUSY_ELEVATOR_PENALTY;
+    }
+
+    return distance + this.UNSUITABLE_ELEVATOR_PENALTY;
+  }
+
+  private findBestElevator(
+    floor: number,
+    direction: 'up' | 'down',
+  ): SmartElevator {
+    let bestElevator: SmartElevator | null = null;
     let bestScore = Infinity;
 
-    for (const el of this.elevators) {
-      const dist = Math.abs(el.getCurrentFloor - floor);
+    for (const elevator of this.elevators) {
+      const score = this.calculateScore(elevator, floor, direction);
 
-      if (el.getDirection === Direction.IDLE) {
-        if (dist < bestScore) {
-          best = el;
-          bestScore = dist;
-        }
-      } else if (
-        el.getDirection === direction &&
-        ((direction === Direction.UP && el.getCurrentFloor <= floor) ||
-          (direction === Direction.DOWN && el.getCurrentFloor >= floor))
-      ) {
-        if (dist + 1 < bestScore) {
-          best = el;
-          bestScore = dist + 1;
-        }
-      } else if (dist + 100 < bestScore) {
-        best = el;
-        bestScore = dist + 100;
+      if (score < bestScore) {
+        bestElevator = elevator;
+        bestScore = score;
       }
     }
 
-    return best!;
+    return bestElevator!;
   }
 
   selectFloor(elevatorId: number, floor: number) {
