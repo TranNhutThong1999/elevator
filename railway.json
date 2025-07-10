@@ -1,0 +1,19 @@
+{
+  "services": [
+    {
+      "name": "frontend",
+      "rootDir": "frontend",
+      "buildCommand": "yarn build",
+      "startCommand": "yarn preview --host 0.0.0.0 --port $PORT",
+      "installCommand": "yarn install --frozen-lockfile"
+    },
+    {
+      "name": "backend",
+      "rootDir": "backend",
+      "buildCommand": "npm run build",
+      "startCommand": "npm run start:prod",
+      "installCommand": "npm ci"
+    }
+  ]
+}
+  
