@@ -23,7 +23,7 @@ export abstract class BaseElevator {
     this.pendingTargets = [];
   }
 
-  abstract addTarget(floor: number): void;
+  abstract addTarget(floor: number, requesDir?: Direction): void;
 
   getState() {
     return {
