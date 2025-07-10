@@ -9,33 +9,33 @@
 
 ---
 
-> **Hệ thống quản lý thang máy thông minh với giao diện web real-time và backend API.**
+> **Smart elevator management system with real-time web interface and backend API.**
 > 
-> Ứng dụng sẽ tự động chọn thang máy phù hợp nhất trong 3 thang để phục vụ người dùng khi họ chọn đi lên (⬆️) hoặc đi xuống (⬇️).
+> The application will automatically select the most suitable elevator among 3 elevators to serve users when they choose to go up (⬆️) or down (⬇️).
 
 ---
 
 ## 📑 Table of Contents
-- [📋 Mô tả dự án](#-mô-tả-dự-án)
+- [📋 Project Description](#-project-description)
 - [🔗 Links](#-links)
-- [🛠️ Yêu cầu hệ thống](#️-yêu-cầu-hệ-thống)
-- [📦 Cài đặt](#-cài-đặt)
-- [⚙️ Cấu hình](#️-cấu-hình)
-- [🚀 Chạy ứng dụng](#-chạy-ứng-dụng)
-- [🔧 Công nghệ sử dụng](#-công-nghệ-sử-dụng)
+- [🛠️ System Requirements](#-system-requirements)
+- [📦 Installation](#-installation)
+- [⚙️ Configuration](#-configuration)
+- [🚀 Running the Application](#-running-the-application)
+- [🔧 Technologies Used](#-technologies-used)
 - [🌐 API Endpoints](#-api-endpoints)
-- [📝 Ghi chú](#-ghi-chú)
+- [📝 Notes](#-notes)
 - [📄 License](#-license)
-- [👨‍💻 Tác giả](#-tác-giả)
+- [👨‍💻 Author](#-author)
 
 ---
 
-## 📋 Mô tả dự án
+## 📋 Project Description
 
-Dự án này bao gồm:
-- **Frontend**: Ứng dụng React với TypeScript, sử dụng Socket.IO để kết nối real-time
-- **Backend**: API NestJS với TypeScript, hỗ trợ WebSocket
-- **Tính năng**: Mô phỏng hệ thống thang máy với thuật toán tối ưu hóa
+This project includes:
+- **Frontend**: React application with TypeScript, using Socket.IO for real-time connection
+- **Backend**: NestJS API with TypeScript, supporting WebSocket
+- **Features**: Simulates an elevator system with optimization algorithm
 
 ---
 
@@ -46,14 +46,14 @@ Dự án này bao gồm:
 
 ---
 
-## 🛠️ Yêu cầu hệ thống
+## 🛠️ System Requirements
 
-- <img src="https://img.shields.io/badge/Node.js-v22-brightgreen" height="16"/> **Node.js**: v22 (khuyến nghị)
-- <img src="https://img.shields.io/badge/npm%20%7C%20yarn-supported-blue" height="16"/> **npm** hoặc **yarn**
+- <img src="https://img.shields.io/badge/Node.js-v22-brightgreen" height="16"/> **Node.js**: v22 (recommended)
+- <img src="https://img.shields.io/badge/npm%20%7C%20yarn-supported-blue" height="16"/> **npm** or **yarn**
 
 ---
 
-## 📦 Cài đặt
+## 📦 Installation
 
 ### 1. Clone repository
 
@@ -62,26 +62,26 @@ git clone https://github.com/TranNhutThong1999/elevator.git
 cd elevator
 ```
 
-### 2. Cài đặt Backend
+### 2. Install Backend
 
 ```bash
 cd backend
-npm install # hoặc yarn install
+npm install # or yarn install
 ```
 
-### 3. Cài đặt Frontend
+### 3. Install Frontend
 
 ```bash
 cd ../frontend
-npm install # hoặc yarn install
+npm install # or yarn install
 ```
 
 ---
 
-## ⚙️ Cấu hình
+## ⚙️ Configuration
 
 ### Backend Configuration
-Tạo file `.env` trong thư mục `backend`:
+Create a `.env` file in the `backend` directory:
 
 ```env
 BUSY_ELEVATOR_PENALTY=10
@@ -91,7 +91,7 @@ MAX_FLOOR=10
 ```
 
 ### Frontend Configuration
-Tạo file `.env` trong thư mục `frontend`:
+Create a `.env` file in the `frontend` directory:
 
 ```env
 VITE_SOCKET_URL=http://localhost:3000
@@ -99,60 +99,59 @@ VITE_SOCKET_URL=http://localhost:3000
 
 ---
 
-## 🚀 Chạy ứng dụng
+## 🚀 Running the Application
 
-### Chạy Backend
+### Run Backend
 
 ```bash
 cd backend
 
 # Development mode
-npm run start:dev # hoặc yarn start:dev
+npm run start:dev # or yarn start:dev
 
 # Production mode
-npm run start:prod # hoặc yarn start:prod
+npm run start:prod # or yarn start:prod
 ```
 
-Backend sẽ chạy tại: [http://localhost:3000](http://localhost:3000)
+Backend will run at: [http://localhost:3000](http://localhost:3000)
 
-### Chạy Frontend
+### Run Frontend
 
 ```bash
 cd frontend
 
 # Development mode
-npm run dev # hoặc yarn dev
+npm run dev # or yarn dev
 
-# Build và preview
-npm run build && npm run preview # hoặc yarn build && yarn preview
+# Build and preview
+npm run build && npm run preview # or yarn build && yarn preview
 ```
 
-Frontend sẽ chạy tại: [http://localhost:5173](http://localhost:5173)
+Frontend will run at: [http://localhost:5173](http://localhost:5173)
 
 ---
-
 
 ## 🌐 API Endpoints
 
-- WebSocket connection cho real-time communication
-- REST API cho quản lý thang máy
+- WebSocket connection for real-time communication
+- REST API for elevator management
 
 ---
 
-## 📝 Ghi chú
+## 📝 Notes
 
-- Kiểm tra các biến môi trường trong file `.env`
-- Frontend và Backend cần chạy đồng thời để hoạt động đầy đủ
-- Backend sử dụng in-memory storage, **không cần database**
+- Check environment variables in the `.env` file
+- Frontend and Backend need to run simultaneously for full functionality
+- Backend uses in-memory storage, **no database required**
 
 ---
 
 ## 📄 License
 
-Dự án này được phát hành dưới license **UNLICENSED**.
+This project is released under the **UNLICENSED** license.
 
 ---
 
-## 👨‍💻 Tác giả
+## 👨‍💻 Author
 
-**Trần Nhựt Thông** - [GitHub](https://github.com/TranNhutThong1999)
+**Tran Nhut Thong** - [GitHub](https://github.com/TranNhutThong1999)
