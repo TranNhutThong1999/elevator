@@ -3,17 +3,16 @@
     {
       "name": "frontend",
       "rootDir": "frontend",
-      "buildCommand": "yarn build",
-      "startCommand": "yarn preview --host 0.0.0.0 --port $PORT",
-      "installCommand": "yarn install --frozen-lockfile"
+      "buildCommand": "npm install && npm run build",
+      "startCommand": "npx serve -s build",
+      "installCommand": "npm install"
     },
     {
       "name": "backend",
       "rootDir": "backend",
-      "buildCommand": "npm run build",
-      "startCommand": "npm run start:prod",
-      "installCommand": "npm ci"
+      "buildCommand": "npm install && npm run build",
+      "startCommand": "node dist/main.js",
+      "installCommand": "npm install"
     }
   ]
 }
-  
