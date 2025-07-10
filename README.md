@@ -44,6 +44,8 @@ This project includes:
 - [**Repository**](https://github.com/TranNhutThong1999/elevator.git)
 - [**Demo**](https://elevator23.netlify.app/)
 
+> **Note:** The backend is hosted on render.com and will go to sleep after 15 minutes of inactivity. When reopening the demo, please wait a few minutes for the server to start and the API to become available.
+
 ---
 
 ## 🛠️ System Requirements
