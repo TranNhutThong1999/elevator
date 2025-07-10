@@ -1,12 +1,31 @@
 import { BaseElevator, Direction } from './elevator-base.model';
+import { EventEmitter } from 'events';
 
 export class SmartElevator extends BaseElevator {
-  private intervalId: NodeJS.Timeout | null = null;
-  private isWaitingAtFloor = false;
-  private closeDoorTimer: NodeJS.Timeout | null = null;
+  private intervalId: NodeJS.Timeout | null;
+  private isWaitingAtFloor: boolean;
+  private closeDoorTimer: NodeJS.Timeout | null;
+  private eventEmitter: EventEmitter;
 
   constructor(id: number) {
     super(id);
+    this.intervalId = null;
+    this.isWaitingAtFloor = false;
+    this.closeDoorTimer = null;
+    this.eventEmitter = new EventEmitter();
+  }
+
+  public on(event: string, listener: (...args: any[]) => void): this {
+    this.eventEmitter.on(event, listener);
+    return this;
+  }
+
+  public emit(event: string, ...args: any[]): boolean {
+    return this.eventEmitter.emit(event, ...args);
+  }
+
+  private emitStateChanged(): void {
+    this.emit('stateChanged', this.getState());
   }
 
   public start(): void {
@@ -45,6 +64,8 @@ export class SmartElevator extends BaseElevator {
       this.direction = Direction.DOWN;
       this.currentFloor--;
     }
+
+    this.emitStateChanged();
   }
 
   private stopToFloorAndOpenDoor(): void {
@@ -58,7 +79,10 @@ export class SmartElevator extends BaseElevator {
       this.doorOpen = false;
       this.isWaitingAtFloor = false;
       this.closeDoorTimer = null;
+      this.emitStateChanged();
     }, 2000);
+
+    this.emitStateChanged();
   }
 
   private stopElevatorIfTargetsNull(): boolean {
@@ -140,6 +164,7 @@ export class SmartElevator extends BaseElevator {
 
     if (wrongDirection && !existedPendingTarget) {
       this.pendingTargets.push(floor);
+      this.emitStateChanged();
     } else if (!existedTarget) {
       this.updateDirectionByFloor(this.currentFloor, floor);
       this.targets = this.sortTargetsByFloor(this.direction, [
@@ -147,6 +172,7 @@ export class SmartElevator extends BaseElevator {
         floor,
       ]);
       this.start();
+      this.emitStateChanged();
     }
   }
 
@@ -167,7 +193,10 @@ export class SmartElevator extends BaseElevator {
       // this.targets.shift();
       this.isWaitingAtFloor = false;
       this.closeDoorTimer = null;
+      this.emitStateChanged();
     }, 2000);
+
+    this.emitStateChanged();
   }
 
   public forceCloseDoor(): void {
@@ -181,5 +210,7 @@ export class SmartElevator extends BaseElevator {
     if (this.targets.length > 0) {
       this.start();
     }
+
+    this.emitStateChanged();
   }
 }

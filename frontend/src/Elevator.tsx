@@ -2,9 +2,7 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000');
-
-const NUM_FLOORS = 10;
+const socket = io(import.meta.env.SOCKET_URL || 'http://localhost:3000');
 
 interface Elevator {
 	id: number;
@@ -20,6 +18,10 @@ export default function ElevatorUI() {
 	const [elevatorAssigned, setElevetorAssigned] = useState<
 		number | undefined
 	>(undefined);
+	const [numberFloor, setNumberFloor] = useState<{
+		min: number;
+		max: number;
+	}>({ min: 1, max: 10 });
 
 	useEffect(() => {
 		if (elevatorAssigned) {
@@ -31,9 +33,22 @@ export default function ElevatorUI() {
 	}, [elevatorAssigned]);
 
 	useEffect(() => {
+		const getData = () => {
+			socket.emit('get-elevators');
+		};
+		getData();
 		socket.on('elevator-state', (data) => {
 			setElevators(data);
 		});
+
+		socket.on('error', (data) => {
+			alert(data.message);
+		});
+
+		socket.once('floor-information', (data) => {
+			setNumberFloor(data);
+		});
+
 		socket.on(
 			'elevator-assigned',
 			(data) => data?.elevatorId && setElevetorAssigned(data.elevatorId)
@@ -42,6 +57,8 @@ export default function ElevatorUI() {
 		return () => {
 			socket.off('elevator-state');
 			socket.off('elevator-assigned');
+			socket.off('floor-information');
+			socket.off('error');
 		};
 	}, []);
 
@@ -85,8 +102,14 @@ export default function ElevatorUI() {
 			</h1>
 			<div className="grid grid-cols-4 gap-6 p-4 bg-white bg-opacity-80 rounded-2xl shadow-2xl">
 				<div className="col-span-1 space-y-2">
-					{[...Array(NUM_FLOORS)].map((_, floorIndex) => {
-						const floor = NUM_FLOORS - floorIndex;
+					{[
+						...Array(
+							Number(numberFloor.max) -
+								Number(numberFloor.min) +
+								1
+						),
+					].map((_, floorIndex) => {
+						const floor = Number(numberFloor.max) - floorIndex;
 						return (
 							<div
 								key={floor}
@@ -96,7 +119,7 @@ export default function ElevatorUI() {
 									Floor {floor}
 								</div>
 								<div className="flex gap-2 mt-1">
-									{floor < NUM_FLOORS && (
+									{floor < Number(numberFloor.max) && (
 										<button
 											onClick={() =>
 												callElevator(floor, 'up')
@@ -107,7 +130,7 @@ export default function ElevatorUI() {
 											▲
 										</button>
 									)}
-									{floor > 1 && (
+									{floor > Number(numberFloor.min) && (
 										<button
 											onClick={() =>
 												callElevator(floor, 'down')
@@ -176,25 +199,36 @@ export default function ElevatorUI() {
 								</span>
 							</div>
 							<div className="flex flex-wrap gap-2 mt-3 justify-center">
-								{[...Array(NUM_FLOORS)].map((_, i) => (
-									<button
-										key={i + 1}
-										className={`cursor-pointer rounded-full w-10 h-10 flex items-center justify-center border-2 text-lg font-bold transition shadow ${
-											el.currentFloor === i + 1 ||
-											isActiveTargets(el, i + 1)
-												? 'bg-indigo-200 border-indigo-500 text-indigo-900'
-												: 'bg-gray-50 border-gray-200 hover:bg-indigo-100 hover:border-indigo-400'
-										}
+								{[
+									...Array(
+										Number(numberFloor.max) -
+											Number(numberFloor.min) +
+											1
+									),
+								].map((_, i) => {
+									const floorNumber =
+										Number(numberFloor.min) + i;
+									return (
+										<button
+											key={floorNumber}
+											className={`cursor-pointer rounded-full w-10 h-10 flex items-center justify-center border-2 text-lg font-bold transition shadow ${
+												el.currentFloor ===
+													floorNumber ||
+												isActiveTargets(el, floorNumber)
+													? 'bg-indigo-200 border-indigo-500 text-indigo-900'
+													: 'bg-gray-50 border-gray-200 hover:bg-indigo-100 hover:border-indigo-400'
+											}
                     
-                    `}
-										onClick={() =>
-											selectFloor(el.id, i + 1)
-										}
-										title={`Select Floor ${i + 1}`}
-									>
-										{i + 1}
-									</button>
-								))}
+											`}
+											onClick={() =>
+												selectFloor(el.id, floorNumber)
+											}
+											title={`Select Floor ${floorNumber}`}
+										>
+											{floorNumber}
+										</button>
+									);
+								})}
 							</div>
 							<div className="mt-4 flex gap-4 justify-center">
 								<button

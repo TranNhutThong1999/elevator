@@ -1,19 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Direction } from 'src/model/elevator-base.model';
 import { SmartElevator } from 'src/model/elevator.model';
+import { EventEmitter } from 'events';
 
 @Injectable()
-export class ElevatorService {
+export class ElevatorService extends EventEmitter {
   private elevators: SmartElevator[] = [];
-  private readonly BUSY_ELEVATOR_PENALTY = 10;
-  private readonly UNSUITABLE_ELEVATOR_PENALTY = 100;
+  private readonly busyElevatorPenalty: number;
+  private readonly unsuitableElevatorPenalty: number;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
+    super();
+    this.busyElevatorPenalty = this.configService.get<number>(
+      'BUSY_ELEVATOR_PENALTY',
+      10,
+    );
+    this.unsuitableElevatorPenalty = this.configService.get<number>(
+      'UNSUITABLE_ELEVATOR_PENALTY',
+      100,
+    );
+
     this.elevators = [
       new SmartElevator(1),
       new SmartElevator(2),
       new SmartElevator(3),
     ];
+
+    this.elevators.forEach((elevator) => {
+      elevator.on('stateChanged', () => {
+        this.emit('elevatorsStateChanged', this.getElevatorsState());
+      });
+    });
   }
 
   callElevator(floor: number, direction: 'up' | 'down') {
@@ -41,10 +59,10 @@ export class ElevatorService {
       (requestDir === Direction.DOWN && currentFloor >= targetFloor);
 
     if (isSameDirection && isHeadingTowardCaller) {
-      return distance + this.BUSY_ELEVATOR_PENALTY;
+      return distance + this.busyElevatorPenalty;
     }
 
-    return distance + this.UNSUITABLE_ELEVATOR_PENALTY;
+    return distance + this.unsuitableElevatorPenalty;
   }
 
   private findBestElevator(
@@ -68,17 +86,26 @@ export class ElevatorService {
 
   selectFloor(elevatorId: number, floor: number) {
     const el = this.elevators.find((e) => e.getId === elevatorId);
-    if (el) el.addTarget(floor);
+    if (!el) {
+      throw new NotFoundException(`Elevator with ID ${elevatorId} not found`);
+    }
+    el.addTarget(floor);
   }
 
   openDoor(elevatorId: number) {
     const el = this.elevators.find((e) => e.getId === elevatorId);
-    if (el) el.forceOpenDoor();
+    if (!el) {
+      throw new NotFoundException(`Elevator with ID ${elevatorId} not found`);
+    }
+    el.forceOpenDoor();
   }
 
   closeDoor(elevatorId: number) {
     const el = this.elevators.find((e) => e.getId === elevatorId);
-    if (el) el.forceCloseDoor();
+    if (!el) {
+      throw new NotFoundException(`Elevator with ID ${elevatorId} not found`);
+    }
+    el.forceCloseDoor();
   }
 
   getElevatorsState() {
