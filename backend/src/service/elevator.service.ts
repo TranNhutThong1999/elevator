@@ -34,11 +34,13 @@ export class ElevatorService extends EventEmitter {
     });
   }
 
-  callElevator(floor: number, direction: 'up' | 'down') {
-    const existedTarget = this.elevators.find(elevator=> elevator.getTargets.includes(floor))
-    if(existedTarget) return;
+  callElevator(floor: number, direction: any) {
+    const existedTarget = this.elevators.find((elevator) =>
+      elevator.getTargets.includes(floor),
+    );
+    if (existedTarget) return;
     const el = this.findBestElevator(floor, direction);
-    el.addTarget(floor);
+    el.addTarget(floor, direction);
     return el;
   }
 
@@ -73,10 +75,9 @@ export class ElevatorService extends EventEmitter {
   ): SmartElevator {
     let bestElevator: SmartElevator | null = null;
     let bestScore = Infinity;
-   
+
     for (const elevator of this.elevators) {
       const score = this.calculateScore(elevator, floor, direction);
-
       if (score < bestScore) {
         bestElevator = elevator;
         bestScore = score;

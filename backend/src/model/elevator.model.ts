@@ -120,11 +120,16 @@ export class SmartElevator extends BaseElevator {
     currentFloor,
     currentDirection,
     floor,
+    requesDir,
   }: {
     currentFloor: number;
     currentDirection: Direction;
     floor: number;
+    requesDir: Direction | undefined;
   }): boolean {
+    if (!!requesDir && currentDirection != Direction.IDLE) {
+      return currentDirection !== requesDir;
+    }
     return (
       (currentFloor > floor && currentDirection === Direction.UP) ||
       (currentFloor < floor && currentDirection === Direction.DOWN)
@@ -152,19 +157,17 @@ export class SmartElevator extends BaseElevator {
     return [...new Set(sortedTargets)];
   }
 
-  override addTarget(floor: number): void {
+  override addTarget(floor: number, requesDir?: Direction): void {
     const wrongDirection = this.checkWrongDirection({
       currentFloor: this.currentFloor,
       currentDirection: this.direction,
       floor,
+      requesDir,
     });
-
     const existedTarget = this.targets.includes(floor);
     const existedPendingTarget = this.pendingTargets.includes(floor);
-
     if (wrongDirection && !existedPendingTarget) {
       this.pendingTargets.push(floor);
-      this.emitStateChanged();
     } else if (!existedTarget) {
       this.updateDirectionByFloor(this.currentFloor, floor);
       this.targets = this.sortTargetsByFloor(this.direction, [
@@ -172,8 +175,8 @@ export class SmartElevator extends BaseElevator {
         floor,
       ]);
       this.start();
-      this.emitStateChanged();
     }
+    this.emitStateChanged();
   }
 
   public forceOpenDoor(): void {
@@ -190,7 +193,6 @@ export class SmartElevator extends BaseElevator {
     this.isWaitingAtFloor = true;
     this.closeDoorTimer = setTimeout(() => {
       this.doorOpen = false;
-      // this.targets.shift();
       this.isWaitingAtFloor = false;
       this.closeDoorTimer = null;
       this.emitStateChanged();
