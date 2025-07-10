@@ -35,6 +35,8 @@ export class ElevatorService extends EventEmitter {
   }
 
   callElevator(floor: number, direction: 'up' | 'down') {
+    const existedTarget = this.elevators.find(elevator=> elevator.getTargets.includes(floor))
+    if(existedTarget) return;
     const el = this.findBestElevator(floor, direction);
     el.addTarget(floor);
     return el;
@@ -71,7 +73,7 @@ export class ElevatorService extends EventEmitter {
   ): SmartElevator {
     let bestElevator: SmartElevator | null = null;
     let bestScore = Infinity;
-
+   
     for (const elevator of this.elevators) {
       const score = this.calculateScore(elevator, floor, direction);
 

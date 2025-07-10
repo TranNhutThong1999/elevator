@@ -104,7 +104,11 @@ export class ElevatorGateway implements OnModuleDestroy {
         data.floor,
         data.direction,
       );
-      client.emit('elevator-assigned', { elevatorId: elevator.getId });
+      if (elevator?.getId) {
+        client.emit('elevator-assigned', {
+          elevatorId: elevator.getId,
+        });
+      }
     });
   }
 
